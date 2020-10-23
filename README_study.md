@@ -77,3 +77,9 @@ callHook(vm, 'created') //
 初始化过程
 new Vue() => this.init(options) => $mount => mountComponent() => _render() => _update()
 调用init      初始化各种属性  调用mountComponent 声明updateComponent 创建Watcher _render获取虚拟dom _upate()把虚拟dom转为真实dom
+
+
+
+#### 数据响应式
+src\core\instance\state.js
+initData，获取data,设置代理，启动响应式

@@ -17,9 +17,9 @@ function Vue (options) {
 }
 
 initMixin(Vue) // 通过该方法给Vue添加_init方法
-stateMixin(Vue) // 
-eventsMixin(Vue) // 
-lifecycleMixin(Vue) // 
-renderMixin(Vue) // 
+stateMixin(Vue) // $set,$watch,$delete
+eventsMixin(Vue) // $emit,$on,$once,$off方法
+lifecycleMixin(Vue) // _update，$forceUpdate，$destroy
+renderMixin(Vue) // $nextTick，_render
 
 export default Vue

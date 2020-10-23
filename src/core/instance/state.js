@@ -129,6 +129,7 @@ function initData (vm: Component) {
   let i = keys.length
   while (i--) {
     const key = keys[i]
+    //判重操作
     if (process.env.NODE_ENV !== 'production') {
       if (methods && hasOwn(methods, key)) {
         warn(
@@ -144,6 +145,7 @@ function initData (vm: Component) {
         vm
       )
     } else if (!isReserved(key)) {
+      //代理
       proxy(vm, `_data`, key)
     }
   }
