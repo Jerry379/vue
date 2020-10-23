@@ -1784,18 +1784,19 @@
       " Expected " + (expectedTypes.map(capitalize).join(', '));
     var expectedType = expectedTypes[0];
     var receivedType = toRawType(value);
-    var expectedValue = styleValue(value, expectedType);
-    var receivedValue = styleValue(value, receivedType);
     // check if we need to specify expected value
-    if (expectedTypes.length === 1 &&
-        isExplicable(expectedType) &&
-        !isBoolean(expectedType, receivedType)) {
-      message += " with value " + expectedValue;
+    if (
+      expectedTypes.length === 1 &&
+      isExplicable(expectedType) &&
+      isExplicable(typeof value) &&
+      !isBoolean(expectedType, receivedType)
+    ) {
+      message += " with value " + (styleValue(value, expectedType));
     }
     message += ", got " + receivedType + " ";
     // check if we need to specify received value
     if (isExplicable(receivedType)) {
-      message += "with value " + receivedValue + ".";
+      message += "with value " + (styleValue(value, receivedType)) + ".";
     }
     return message
   }
@@ -1810,9 +1811,9 @@
     }
   }
 
+  var EXPLICABLE_TYPES = ['string', 'number', 'boolean'];
   function isExplicable (value) {
-    var explicitTypes = ['string', 'number', 'boolean'];
-    return explicitTypes.some(function (elem) { return value.toLowerCase() === elem; })
+    return EXPLICABLE_TYPES.some(function (elem) { return value.toLowerCase() === elem; })
   }
 
   function isBoolean () {
@@ -3273,8 +3274,10 @@
   }
 
   function createComponentInstanceForVnode (
-    vnode, // we know it's MountedComponentVNode but flow doesn't
-    parent // activeInstance in lifecycle state
+    // we know it's MountedComponentVNode but flow doesn't
+    vnode,
+    // activeInstance in lifecycle state
+    parent
   ) {
     var options = {
       _isComponent: true,
@@ -3497,6 +3500,7 @@
     vm._c = function (a, b, c, d) { return createElement(vm, a, b, c, d, false); };
     // normalization is always applied for the public version, used in
     // user-written render functions.
+    // render(h) 此处的$createElement就是h
     vm.$createElement = function (a, b, c, d) { return createElement(vm, a, b, c, d, true); };
 
     // $attrs & $listeners are exposed for easier HOC creation.
@@ -4064,6 +4068,7 @@
       };
     } else {
       updateComponent = function () {
+        // vm._render()方法得到虚拟dom,vm._update方法将虚拟dom转为真实dom
         vm._update(vm._render(), hydrating);
       };
     }
@@ -4071,6 +4076,7 @@
     // we set this to vm._watcher inside the watcher's constructor
     // since the watcher's initial patch may call $forceUpdate (e.g. inside child
     // component's mounted hook), which relies on vm._watcher being already defined
+    // Watcher会让updateComponent直行一次，如果以后有更新，watcher会让更新函数再次执行，
     new Watcher(vm, updateComponent, noop, {
       before: function before () {
         if (vm._isMounted && !vm._isDestroyed) {
@@ -4973,7 +4979,7 @@
 
       // a flag to avoid this being observed
       vm._isVue = true;
-      // merge options
+      // merge options 合并选项，默认选项和用户传入的选项合并
       if (options && options._isComponent) {
         // optimize internal component instantiation
         // since dynamic options merging is pretty slow, and none of the
@@ -4992,14 +4998,14 @@
       }
       // expose real self
       vm._self = vm;
-      initLifecycle(vm);
-      initEvents(vm);
-      initRender(vm);
-      callHook(vm, 'beforeCreate');
-      initInjections(vm); // resolve injections before data/props
-      initState(vm);
-      initProvide(vm); // resolve provide after data/props
-      callHook(vm, 'created');
+      initLifecycle(vm); // 初始化生命周期，设置$parent,$root,$children,$refs
+      initEvents(vm); // 对父组件传入的事件和回调添加监听
+      initRender(vm); // 声明了插槽相关的$slots、$scopedSlots，定义了$createElement方法
+      callHook(vm, 'beforeCreate'); // 调用beforeCreate钩子
+      initInjections(vm); // resolve injections before data/props 注入数据
+      initState(vm); // 重要：数据初始化，响应式
+      initProvide(vm); // resolve provide after data/props 提供数据
+      callHook(vm, 'created'); // 
 
       /* istanbul ignore if */
       if (config.performance && mark) {
@@ -5070,19 +5076,21 @@
     return modified
   }
 
+  //Vue的构造函数
   function Vue (options) {
     if (!(this instanceof Vue)
     ) {
       warn('Vue is a constructor and should be called with the `new` keyword');
     }
+    //初始化
     this._init(options);
   }
 
-  initMixin(Vue);
-  stateMixin(Vue);
-  eventsMixin(Vue);
-  lifecycleMixin(Vue);
-  renderMixin(Vue);
+  initMixin(Vue); // 通过该方法给Vue添加_init方法
+  stateMixin(Vue); // 
+  eventsMixin(Vue); // 
+  lifecycleMixin(Vue); // 
+  renderMixin(Vue); //
 
   /*  */
 
@@ -5425,6 +5433,7 @@
     initAssetRegisters(Vue);
   }
 
+  //定义全局API
   initGlobalAPI(Vue);
 
   Object.defineProperty(Vue.prototype, '$isServer', {
@@ -5480,7 +5489,7 @@
     'default,defaultchecked,defaultmuted,defaultselected,defer,disabled,' +
     'enabled,formnovalidate,hidden,indeterminate,inert,ismap,itemscope,loop,multiple,' +
     'muted,nohref,noresize,noshade,novalidate,nowrap,open,pauseonexit,readonly,' +
-    'required,reversed,scoped,seamless,selected,sortable,translate,' +
+    'required,reversed,scoped,seamless,selected,sortable,' +
     'truespeed,typemustmatch,visible'
   );
 
@@ -6705,7 +6714,7 @@
       cur = attrs[key];
       old = oldAttrs[key];
       if (old !== cur) {
-        setAttr(elm, key, cur);
+        setAttr(elm, key, cur, vnode.data.pre);
       }
     }
     // #4391: in IE9, setting type can reset value for input[type=radio]
@@ -6725,8 +6734,8 @@
     }
   }
 
-  function setAttr (el, key, value) {
-    if (el.tagName.indexOf('-') > -1) {
+  function setAttr (el, key, value, isInPre) {
+    if (isInPre || el.tagName.indexOf('-') > -1) {
       baseSetAttr(el, key, value);
     } else if (isBooleanAttr(key)) {
       // set attribute for blank value
@@ -9029,10 +9038,12 @@
   Vue.config.isUnknownElement = isUnknownElement;
 
   // install platform runtime directives & components
+  // 安装指令和组件
   extend(Vue.options.directives, platformDirectives);
   extend(Vue.options.components, platformComponents);
 
   // install platform patch function
+  // 指定补丁方法：传入虚拟dom转换为真实dom
   Vue.prototype.__patch__ = inBrowser ? patch : noop;
 
   // public mount method
@@ -9041,6 +9052,7 @@
     hydrating
   ) {
     el = el && inBrowser ? query(el) : undefined;
+    // 初始化，将首次渲染结果替换el
     return mountComponent(this, el, hydrating)
   };
 
@@ -9247,7 +9259,7 @@
 
   // Regular Expressions for parsing tags and attributes
   var attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/;
-  var dynamicArgAttribute = /^\s*((?:v-[\w-]+:|@|:|#)\[[^=]+\][^\s"'<>\/=]*)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/;
+  var dynamicArgAttribute = /^\s*((?:v-[\w-]+:|@|:|#)\[[^=]+?\][^\s"'<>\/=]*)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/;
   var ncname = "[a-zA-Z_][\\-\\.0-9_a-zA-Z" + (unicodeRegExp.source) + "]*";
   var qnameCapture = "((?:" + ncname + "\\:)?" + ncname + ")";
   var startTagOpen = new RegExp(("^<" + qnameCapture));
@@ -10850,9 +10862,9 @@
         code += genModifierCode;
       }
       var handlerCode = isMethodPath
-        ? ("return " + (handler.value) + "($event)")
+        ? ("return " + (handler.value) + ".apply(null, arguments)")
         : isFunctionExpression
-          ? ("return (" + (handler.value) + ")($event)")
+          ? ("return (" + (handler.value) + ").apply(null, arguments)")
           : isFunctionInvocation
             ? ("return " + (handler.value))
             : handler.value;
@@ -11874,7 +11886,9 @@
     return el && el.innerHTML
   });
 
+  //保存原来的$mount
   var mount = Vue.prototype.$mount;
+  //覆盖/扩展默认的$mount
   Vue.prototype.$mount = function (
     el,
     hydrating
@@ -11891,8 +11905,17 @@
 
     var options = this.$options;
     // resolve template/el and convert to render function
+    //判断如果没有render的话执行下面的代码将template转化为render,说明render方法的优先级要比template/el要高
+    //优先级 render > template > el
     if (!options.render) {
       var template = options.template;
+      /**
+       * template的值得情况
+       * 1.template:'#id' ===== 取id得innerHTML
+       * 2.template传入的是dom,例如：document.querySelector('#id') ==== 取dom的innerHTML
+       * 3.非上面两种情况的话，return vue实例
+       * 4.没有传template的话，取el的outerHTML,如果outerHTML不存在(例如：el是IE中的svg元素)会创建一个div元素返回div的innerHTML
+       */
       if (template) {
         if (typeof template === 'string') {
           if (template.charAt(0) === '#') {
@@ -11916,6 +11939,9 @@
       } else if (el) {
         template = getOuterHTML(el);
       }
+      /**
+       * 如果存在template,执行编译，得到render函数
+       */
       if (template) {
         /* istanbul ignore if */
         if (config.performance && mark) {
@@ -11941,6 +11967,7 @@
         }
       }
     }
+    // 执行挂载
     return mount.call(this, el, hydrating)
   };
 
@@ -11963,3 +11990,4 @@
   return Vue;
 
 }));
+//# sourceMappingURL=vue.js.map
