@@ -14,7 +14,9 @@ const idToTemplate = cached(id => {
   return el && el.innerHTML
 })
 
+//保存原来的$mount
 const mount = Vue.prototype.$mount
+//覆盖/扩展默认的$mount
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
@@ -31,8 +33,17 @@ Vue.prototype.$mount = function (
 
   const options = this.$options
   // resolve template/el and convert to render function
+  //判断如果没有render的话执行下面的代码将template转化为render,说明render方法的优先级要比template/el要高
+  //优先级 render > template > el
   if (!options.render) {
     let template = options.template
+    /**
+     * template的值得情况
+     * 1.template:'#id' ===== 取id得innerHTML
+     * 2.template传入的是dom,例如：document.querySelector('#id') ==== 取dom的innerHTML
+     * 3.非上面两种情况的话，return vue实例
+     * 4.没有传template的话，取el的outerHTML,如果outerHTML不存在(例如：el是IE中的svg元素)会创建一个div元素返回div的innerHTML
+     */
     if (template) {
       if (typeof template === 'string') {
         if (template.charAt(0) === '#') {
@@ -56,6 +67,9 @@ Vue.prototype.$mount = function (
     } else if (el) {
       template = getOuterHTML(el)
     }
+    /**
+     * 如果存在template,执行编译，得到render函数
+     */
     if (template) {
       /* istanbul ignore if */
       if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
@@ -79,6 +93,7 @@ Vue.prototype.$mount = function (
       }
     }
   }
+  // 执行挂载
   return mount.call(this, el, hydrating)
 }
 
