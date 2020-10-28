@@ -12,11 +12,11 @@ import {
 } from 'core/vdom/helpers/index'
 
 export const transitionProps = {
-  name: String,
-  appear: Boolean,
-  css: Boolean,
-  mode: String,
-  type: String,
+  name: String, //用于自动生成 CSS 过渡类名,name: 'fade' 将自动拓展为 .fade-enter，.fade-enter-active 等。默认类名为 "v"
+  appear: Boolean, //是否在初始渲染时使用过渡。默认为 false
+  css: Boolean, //是否使用 CSS 过渡类。默认为 true。如果设置为 false，将只通过组件事件触发注册的 JavaScript 钩子。
+  mode: String, //控制离开/进入过渡的时间序列。有效的模式有 "out-in" 和 "in-out"；默认同时进行。
+  type: String, //指定过渡事件类型，侦听过渡何时结束。有效值为 "transition" 和 "animation"。
   enterClass: String,
   leaveClass: String,
   enterToClass: String,
@@ -26,7 +26,7 @@ export const transitionProps = {
   appearClass: String,
   appearActiveClass: String,
   appearToClass: String,
-  duration: [Number, String, Object]
+  duration: [Number, String, Object] //指定过渡的持续时间
 }
 
 // in case the child is also an abstract component, e.g. <keep-alive>
@@ -86,7 +86,7 @@ export default {
   abstract: true,
 
   render (h: Function) {
-    let children: any = this.$slots.default
+    let children: any = this.$slots.default //transition组件内的元素
     if (!children) {
       return
     }

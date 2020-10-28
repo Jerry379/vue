@@ -150,11 +150,12 @@ export function hasOwn (obj: Object | Array<*>, key: string): boolean {
 /**
  * Create a cached version of a pure function.
  */
+// 每次执行函数后的值进行缓存，当再次执行的时候直接调用缓存的数据而不是重复执行函数，以此提高前端性能，这是典型的用空间换时间的优化，也是经典的偏函数应用。
 export function cached<F: Function> (fn: F): F {
-  const cache = Object.create(null)
+  const cache = Object.create(null) // 创建空对象作为缓存对象
   return (function cachedFn (str: string) {
     const hit = cache[str]
-    return hit || (cache[str] = fn(str))
+    return hit || (cache[str] = fn(str)) // 每次执行时缓存对象有值则不需要执行函数方法，没有则执行并缓存起来
   }: any)
 }
 

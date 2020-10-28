@@ -58,7 +58,7 @@ export let currentRenderingInstance: Component | null = null
 export function setCurrentRenderingInstance (vm: Component) {
   currentRenderingInstance = vm
 }
-
+// 定义原型上跟渲染相关的方法
 export function renderMixin (Vue: Class<Component>) {
   // install runtime convenience helpers
   installRenderHelpers(Vue.prototype)

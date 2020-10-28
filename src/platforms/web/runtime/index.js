@@ -28,7 +28,12 @@ Vue.config.isUnknownElement = isUnknownElement
 
 // install platform runtime directives & components
 // 安装指令和组件
+//extend(to,from)的作用是将两个对象合并为一个对象，from的同名属性会覆盖to中的属性
+//platformDirectives中有v-model和v-show两个指令
 extend(Vue.options.directives, platformDirectives)
+/**
+ * 定义了transition和transition-group两个组件
+ */
 extend(Vue.options.components, platformComponents)
 
 // install platform patch function

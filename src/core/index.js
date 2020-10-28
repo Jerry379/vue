@@ -6,6 +6,7 @@ import { FunctionalRenderContext } from 'core/vdom/create-functional-component'
 //定义全局API
 initGlobalAPI(Vue)
 
+//当前 Vue 实例是否运行于服务器。
 Object.defineProperty(Vue.prototype, '$isServer', {
   get: isServerRendering
 })

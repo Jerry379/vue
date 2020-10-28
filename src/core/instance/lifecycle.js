@@ -54,7 +54,7 @@ export function initLifecycle (vm: Component) {
   vm._isDestroyed = false
   vm._isBeingDestroyed = false
 }
-
+// 定义跟生命周期相关的方法
 export function lifecycleMixin (Vue: Class<Component>) {
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this

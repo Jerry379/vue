@@ -1677,7 +1677,7 @@ function mergeOptions (
   if (typeof child === 'function') {
     child = child.options;
   }
-
+  //props,inject,directives的校验和规范化
   normalizeProps(child, vm);
   normalizeInject(child, vm);
   normalizeDirectives(child);
@@ -1686,6 +1686,7 @@ function mergeOptions (
   // but only if it is a raw options object that isn't
   // the result of another mergeOptions call.
   // Only merged options has the _base property.
+  // 针对extends扩展的子类构造器
   if (!child._base) {
     if (child.extends) {
       parent = mergeOptions(parent, child.extends, vm);
@@ -1708,7 +1709,9 @@ function mergeOptions (
     }
   }
   function mergeField (key) {
+    // 拿到各个选择指定的选项配置，如果没有则用默认的配置
     var strat = strats[key] || defaultStrat;
+    // 执行各自的合并策略
     options[key] = strat(parent[key], child[key], vm, key);
   }
   return options

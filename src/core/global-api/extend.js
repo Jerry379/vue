@@ -16,6 +16,30 @@ export function initExtend (Vue: GlobalAPI) {
   /**
    * Class inheritance
    */
+  /**
+   *  var Parent = Vue.extend({
+   *    data() {
+          test: '父类'，
+          test1: '父类1'
+        }
+      })
+      var Child = Parent.extend({
+        data() {
+          test: '子类',
+          test2: '子类1'
+        }
+      })
+      var vm = new Child().$mount('#app');
+      console.log(vm.$data);
+      // 结果 
+      {
+        test: '子类',
+        test1: '父类1',
+        test2: '子类1'
+      }
+      子类的options会和父类的options合并
+   * @param {*} extendOptions 
+   */
   Vue.extend = function (extendOptions: Object): Function {
     extendOptions = extendOptions || {}
     const Super = this
@@ -27,9 +51,9 @@ export function initExtend (Vue: GlobalAPI) {
 
     const name = extendOptions.name || Super.options.name
     if (process.env.NODE_ENV !== 'production' && name) {
-      validateComponentName(name)
+      validateComponentName(name) // 校验子类的名称是否符合规范
     }
-
+    // 创建子类构造器
     const Sub = function VueComponent (options) {
       this._init(options)
     }

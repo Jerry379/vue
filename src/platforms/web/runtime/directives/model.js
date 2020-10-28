@@ -9,6 +9,11 @@ import { mergeVNodeHook } from 'core/vdom/helpers/index'
 import { warn, isIE9, isIE, isEdge } from 'core/util/index'
 
 /* istanbul ignore if */
+/**
+ * 下面这段代码是为了解决IE9中输入框的input事件无法监听键盘的backspace键和delete键和右键菜单的剪切、撤销、删除对内容的改变问题，
+ * 用keyup事件可以解决backspace键和delete键的问题，但是无法处理剪切、撤销、删除的问题。
+ * 通过selectionchange事件，进而触发事件的input事件来处理这个问题
+ */
 if (isIE9) {
   // http://www.matts411.com/post/internet-explorer-9-oninput/
   document.addEventListener('selectionchange', () => {
@@ -18,20 +23,35 @@ if (isIE9) {
     }
   })
 }
-
+/**
+ * text 和 textarea 元素使用 value property 和 input 事件；
+ * checkbox 和 radio 使用 checked property 和 change 事件；
+ * select 字段将 value 作为 prop 并将 change 作为事件。
+ */
 const directive = {
+  //被绑定元素插入父节点时调用 (仅保证父节点存在，但不一定已被插入文档中)。
+  /**
+   * 
+   * @param {*} el 指令所绑定的元素
+   * @param {*} binding 一个对象，包含name(指令名),value(指令值),oldvalue(指令绑定的前一个值),expression(字符串形式的指令表达式),arg(传给指令的参数),modifiers(一个包含修饰符的对象)
+   * @param {*} vnode Vue 编译生成的虚拟节点
+   * @param {*} oldVnode 上一个虚拟节点
+   */
   inserted (el, binding, vnode, oldVnode) {
     if (vnode.tag === 'select') {
       // #6903
       if (oldVnode.elm && !oldVnode.elm._vOptions) {
+        //更新时走这里
         mergeVNodeHook(vnode, 'postpatch', () => {
           directive.componentUpdated(el, binding, vnode)
         })
       } else {
+        //创建时会走这里
         setSelected(el, binding, vnode.context)
       }
       el._vOptions = [].map.call(el.options, getValue)
     } else if (vnode.tag === 'textarea' || isTextInputType(el.type)) {
+      //如果是textarea或者input type="text||number||password||search||email||tel||url"的时候走这里
       el._vModifiers = binding.modifiers
       if (!binding.modifiers.lazy) {
         el.addEventListener('compositionstart', onCompositionStart)
@@ -48,7 +68,7 @@ const directive = {
       }
     }
   },
-
+  //指令所在组件的 VNode 及其子 VNode 全部更新后调用。
   componentUpdated (el, binding, vnode) {
     if (vnode.tag === 'select') {
       setSelected(el, binding, vnode.context)
@@ -71,7 +91,7 @@ const directive = {
     }
   }
 }
-
+//设置select的选中项
 function setSelected (el, binding, vm) {
   actuallySetSelected(el, binding, vm)
   /* istanbul ignore if */
@@ -85,6 +105,7 @@ function setSelected (el, binding, vm) {
 function actuallySetSelected (el, binding, vm) {
   const value = binding.value
   const isMultiple = el.multiple
+  //如果是多选的话，值要是数组
   if (isMultiple && !Array.isArray(value)) {
     process.env.NODE_ENV !== 'production' && warn(
       `<select multiple v-model="${binding.expression}"> ` +

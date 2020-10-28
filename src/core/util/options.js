@@ -278,11 +278,13 @@ function checkComponents (options: Object) {
 
 export function validateComponentName (name: string) {
   if (!new RegExp(`^[a-zA-Z][\\-\\.0-9_${unicodeRegExp.source}]*$`).test(name)) {
+    // 正则判断检测是否为非法的标签，例如数字开头
     warn(
       'Invalid component name: "' + name + '". Component names ' +
       'should conform to valid custom element name in html5 specification.'
     )
   }
+  // 不能使用Vue自身自定义的组件名，如slot, component,不能使用html的保留标签，如 h1, svg等
   if (isBuiltInTag(name) || config.isReservedTag(name)) {
     warn(
       'Do not use built-in or reserved HTML elements as component ' +
@@ -295,19 +297,24 @@ export function validateComponentName (name: string) {
  * Ensure all props option syntax are normalized into the
  * Object-based format.
  */
+// props规范校验
 function normalizeProps (options: Object, vm: ?Component) {
   const props = options.props
   if (!props) return
   const res = {}
   let i, val, name
+  // props选项数据有两种形式，一种是['a', 'b', 'c'],一种是{ a: { type: 'String', default: 'hahah' }}
+  // 数组会转换为对象形式
   if (Array.isArray(props)) {
     i = props.length
     while (i--) {
       val = props[i]
       if (typeof val === 'string') {
         name = camelize(val)
+        // 默认将数组形式的props转换为对象形式。
         res[name] = { type: null }
       } else if (process.env.NODE_ENV !== 'production') {
+        // 规则：保证是字符串
         warn('props must be strings when using array syntax.')
       }
     }
@@ -320,6 +327,7 @@ function normalizeProps (options: Object, vm: ?Component) {
         : { type: val }
     }
   } else if (process.env.NODE_ENV !== 'production') {
+    // 非数组，非对象则判定props选项传递非法
     warn(
       `Invalid value for option "props": expected an Array or an Object, ` +
       `but got ${toRawType(props)}.`,
@@ -332,15 +340,19 @@ function normalizeProps (options: Object, vm: ?Component) {
 /**
  * Normalize all injections into Object-based format
  */
+// inject的规范化，inject和props一样有两种书写方式，一种是对象，一种是数组，数组的形式会被默认转换为对象的形式
 function normalizeInject (options: Object, vm: ?Component) {
   const inject = options.inject
   if (!inject) return
   const normalized = options.inject = {}
+  //数组的形式
   if (Array.isArray(inject)) {
     for (let i = 0; i < inject.length; i++) {
+      // from: 属性是在可用的注入内容中搜索用的 key (字符串或 Symbol)
       normalized[inject[i]] = { from: inject[i] }
     }
   } else if (isPlainObject(inject)) {
+    // 对象的处理
     for (const key in inject) {
       const val = inject[key]
       normalized[key] = isPlainObject(val)
@@ -348,6 +360,7 @@ function normalizeInject (options: Object, vm: ?Component) {
         : { from: val }
     }
   } else if (process.env.NODE_ENV !== 'production') {
+    // 非法规则
     warn(
       `Invalid value for option "inject": expected an Array or an Object, ` +
       `but got ${toRawType(inject)}.`,
@@ -359,11 +372,13 @@ function normalizeInject (options: Object, vm: ?Component) {
 /**
  * Normalize raw function directives into object format.
  */
+
 function normalizeDirectives (options: Object) {
   const dirs = options.directives
   if (dirs) {
     for (const key in dirs) {
       const def = dirs[key]
+      // 函数简写同样会转换成对象的形式
       if (typeof def === 'function') {
         dirs[key] = { bind: def, update: def }
       }
@@ -397,7 +412,7 @@ export function mergeOptions (
   if (typeof child === 'function') {
     child = child.options
   }
-
+  // props,inject,directives的校验和规范化
   normalizeProps(child, vm)
   normalizeInject(child, vm)
   normalizeDirectives(child)
@@ -406,6 +421,7 @@ export function mergeOptions (
   // but only if it is a raw options object that isn't
   // the result of another mergeOptions call.
   // Only merged options has the _base property.
+  // 针对extends扩展的子类构造器
   if (!child._base) {
     if (child.extends) {
       parent = mergeOptions(parent, child.extends, vm)
