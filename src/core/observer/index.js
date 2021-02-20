@@ -7,7 +7,7 @@ import {
   def,
   warn,
   hasOwn,
-  hasProto,
+  hasProto,// 对象是否有'__proto__'属性
   isObject,
   isPlainObject,
   isPrimitive,
@@ -16,11 +16,13 @@ import {
   isServerRendering
 } from '../util/index'
 
+//arrayKeys就是src\core\observer\array.js中的methodsToPatch
 const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
 
 /**
  * In some cases we may want to disable observation inside a component's
  * update computation.
+ * 在某些情况下，我们可能想要在组件的更新计算中禁用观察功能。
  */
 export let shouldObserve: boolean = true
 
@@ -33,6 +35,7 @@ export function toggleObserving (value: boolean) {
  * object. Once attached, the observer converts the target
  * object's property keys into getter/setters that
  * collect dependencies and dispatch updates.
+ * 附加到每个被观察对象的观察者类。一旦附加上，观察者就会把目标对象的属性键转换成getter/setter来收集依赖项和分发更新。
  */
 export class Observer {
   value: any;
@@ -44,8 +47,8 @@ export class Observer {
     this.dep = new Dep()
     this.vmCount = 0
     def(value, '__ob__', this)
-    if (Array.isArray(value)) {
-      if (hasProto) {
+    if (Array.isArray(value)) {//判断value是数组还是纯对象
+      if (hasProto) {//判断是否可以使用__proto__属性
         protoAugment(value, arrayMethods)
       } else {
         copyAugment(value, arrayMethods, arrayKeys)
@@ -70,6 +73,7 @@ export class Observer {
 
   /**
    * Observe a list of Array items.
+   * 观察数组项的列表。
    */
   observeArray (items: Array<any>) {
     for (let i = 0, l = items.length; i < l; i++) {
@@ -83,6 +87,7 @@ export class Observer {
 /**
  * Augment a target Object or Array by intercepting
  * the prototype chain using __proto__
+ * 通过使用__proto__截取原型链来扩展目标对象或数组
  */
 function protoAugment (target, src: Object) {
   /* eslint-disable no-proto */
@@ -131,6 +136,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
 
 /**
  * Define a reactive property on an Object.
+ * 在对象上定义一个反应性属性。
  */
 export function defineReactive (
   obj: Object,
@@ -139,14 +145,14 @@ export function defineReactive (
   customSetter?: ?Function,
   shallow?: boolean
 ) {
-  const dep = new Dep()
+  const dep = new Dep() //实例化一个依赖管理器，生成一个依赖管理数组dep
 
   const property = Object.getOwnPropertyDescriptor(obj, key)
   if (property && property.configurable === false) {
     return
   }
 
-  // cater for pre-defined getter/setters
+  // cater for pre-defined getter/setters 适用于预定义的getter/setter
   const getter = property && property.get
   const setter = property && property.set
   if ((!getter || setter) && arguments.length === 2) {
@@ -160,7 +166,7 @@ export function defineReactive (
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
-        dep.depend()
+        dep.depend()// 在getter中收集依赖
         if (childOb) {
           childOb.dep.depend()
           if (Array.isArray(value)) {
@@ -188,7 +194,7 @@ export function defineReactive (
         val = newVal
       }
       childOb = !shallow && observe(newVal)
-      dep.notify()
+      dep.notify()// 在setter中通知依赖更新
     }
   })
 }
@@ -264,6 +270,7 @@ export function del (target: Array<any> | Object, key: any) {
 /**
  * Collect dependencies on array elements when the array is touched, since
  * we cannot intercept array element access like property getters.
+ * 当数组被碰触时，收集数组元素的依赖项，因为我们不能像属性getter那样拦截数组元素访问。
  */
 function dependArray (value: Array<any>) {
   for (let e, i = 0, l = value.length; i < l; i++) {

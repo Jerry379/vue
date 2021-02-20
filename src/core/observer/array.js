@@ -3,11 +3,13 @@
  * dynamically accessing methods on Array prototype
  */
 
+// def 就是object.defineProperty的简写，def(obj,key,val,enumerable)
 import { def } from '../util/index'
 
 const arrayProto = Array.prototype
 export const arrayMethods = Object.create(arrayProto)
 
+//数组中能够改变数组内容的7种方法
 const methodsToPatch = [
   'push',
   'pop',
