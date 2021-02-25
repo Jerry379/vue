@@ -7,14 +7,14 @@ export default class VNode {
   text: string | void;
   elm: Node | void;
   ns: string | void;
-  context: Component | void; // rendered in this component's scope
+  context: Component | void; // rendered in this component's scope 在该组件的作用域中呈现
   key: string | number | void;
   componentOptions: VNodeComponentOptions | void;
-  componentInstance: Component | void; // component instance
+  componentInstance: Component | void; // component instance 组件实例
   parent: VNode | void; // component placeholder node
 
   // strictly internal
-  raw: boolean; // contains raw HTML? (server only)
+  raw: boolean; // contains raw HTML? (server only) 包含原始HTML？
   isStatic: boolean; // hoisted static node
   isRootInsert: boolean; // necessary for enter transition check
   isComment: boolean; // empty comment placeholder?
@@ -63,8 +63,7 @@ export default class VNode {
     this.asyncMeta = undefined
     this.isAsyncPlaceholder = false
   }
-
-  // DEPRECATED: alias for componentInstance for backwards compat.
+  // DEPRECATED: alias for componentInstance for backwards compat. 向后兼容组件实例的别名。
   /* istanbul ignore next */
   get child (): Component | void {
     return this.componentInstance
@@ -92,7 +91,7 @@ export function cloneVNode (vnode: VNode): VNode {
     vnode.data,
     // #7975
     // clone children array to avoid mutating original in case of cloning
-    // a child.
+    // a child. 克隆子数组以避免在克隆子数组时更改原始数组。
     vnode.children && vnode.children.slice(),
     vnode.text,
     vnode.elm,

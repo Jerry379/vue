@@ -1,5 +1,6 @@
 /* @flow */
-
+// isDef不是undefined和null
+// remove(arr, item) 移除数组中的某一项
 import { remove, isDef } from 'shared/util'
 
 export default {
@@ -19,7 +20,7 @@ export default {
 
 export function registerRef (vnode: VNodeWithData, isRemoval: ?boolean) {
   const key = vnode.data.ref
-  if (!isDef(key)) return
+  if (!isDef(key)) return //如果key=null或者undefined则return 
 
   const vm = vnode.context
   const ref = vnode.componentInstance || vnode.elm
@@ -32,9 +33,9 @@ export function registerRef (vnode: VNodeWithData, isRemoval: ?boolean) {
     }
   } else {
     if (vnode.data.refInFor) {
-      if (!Array.isArray(refs[key])) {
+      if (!Array.isArray(refs[key])) {//不是数组
         refs[key] = [ref]
-      } else if (refs[key].indexOf(ref) < 0) {
+      } else if (refs[key].indexOf(ref) < 0) {// 是数组并且不存在
         // $flow-disable-line
         refs[key].push(ref)
       }

@@ -87,6 +87,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // updated in a parent's updated hook.
   }
 
+  // 迫使 Vue 实例重新渲染。注意它仅仅影响实例本身和插入插槽内容的子组件，而不是所有子组件。
   Vue.prototype.$forceUpdate = function () {
     const vm: Component = this
     if (vm._watcher) {
@@ -94,19 +95,20 @@ export function lifecycleMixin (Vue: Class<Component>) {
     }
   }
 
+  // 完全销毁一个实例。清理它与其它实例的连接，解绑它的全部指令及事件监听器。触发 beforeDestroy 和 destroyed 的钩子。
   Vue.prototype.$destroy = function () {
     const vm: Component = this
-    if (vm._isBeingDestroyed) {
+    if (vm._isBeingDestroyed) {//如果正在被销毁就return
       return
     }
-    callHook(vm, 'beforeDestroy')
+    callHook(vm, 'beforeDestroy')//触发beforeDestroy钩子
     vm._isBeingDestroyed = true
     // remove self from parent
     const parent = vm.$parent
     if (parent && !parent._isBeingDestroyed && !vm.$options.abstract) {
       remove(parent.$children, vm)
     }
-    // teardown watchers
+    // teardown watchers 拆卸观察者
     if (vm._watcher) {
       vm._watcher.teardown()
     }
@@ -114,8 +116,8 @@ export function lifecycleMixin (Vue: Class<Component>) {
     while (i--) {
       vm._watchers[i].teardown()
     }
-    // remove reference from data ob
-    // frozen object may not have observer.
+    // remove reference from data ob 从数据对象中删除引用
+    // frozen object may not have observer. 冻结对象可能没有观察者。
     if (vm._data.__ob__) {
       vm._data.__ob__.vmCount--
     }
@@ -124,8 +126,8 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // invoke destroy hooks on current rendered tree
     vm.__patch__(vm._vnode, null)
     // fire destroyed hook
-    callHook(vm, 'destroyed')
-    // turn off all instance listeners.
+    callHook(vm, 'destroyed')//触发destroyed钩子
+    // turn off all instance listeners.移除自定义事件监听器。移除所有的事件监听器；
     vm.$off()
     // remove __vue__ reference
     if (vm.$el) {
@@ -292,13 +294,14 @@ export function updateChildComponent (
   }
 }
 
+// 是否是非活动的tree
 function isInInactiveTree (vm) {
   while (vm && (vm = vm.$parent)) {
     if (vm._inactive) return true
   }
   return false
 }
-
+// 激活子组件
 export function activateChildComponent (vm: Component, direct?: boolean) {
   if (direct) {
     vm._directInactive = false
@@ -317,6 +320,7 @@ export function activateChildComponent (vm: Component, direct?: boolean) {
   }
 }
 
+// 停用子组件
 export function deactivateChildComponent (vm: Component, direct?: boolean) {
   if (direct) {
     vm._directInactive = true
@@ -334,7 +338,7 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
 }
 
 export function callHook (vm: Component, hook: string) {
-  // #7573 disable dep collection when invoking lifecycle hooks
+  // #7573 disable dep collection when invoking lifecycle hooks 调用生命周期钩子时禁用dep收集
   pushTarget()
   const handlers = vm.$options[hook]
   const info = `${hook} hook`

@@ -14,9 +14,9 @@ import VNode, { cloneVNode } from './vnode'
 import config from '../config'
 import { SSR_ATTR } from 'shared/constants'
 import { registerRef } from './modules/ref'
-import { traverse } from '../observer/traverse'
+import { traverse } from '../observer/traverse' //递归遍历对象以调用所有转换的getter，这样对象中的每个嵌套属性都作为“深层”依赖项收集。
 import { activeInstance } from '../instance/lifecycle'
-import { isTextInputType } from 'web/util/element'
+import { isTextInputType } from 'web/util/element' //是否是可以输入文本的input类型
 
 import {
   warn,
@@ -32,6 +32,7 @@ export const emptyNode = new VNode('', {}, [])
 
 const hooks = ['create', 'activate', 'update', 'remove', 'destroy']
 
+// 两个vnode是否相同，会比较key、tag、isComment、data、input类型
 function sameVnode (a, b) {
   return (
     a.key === b.key && (
