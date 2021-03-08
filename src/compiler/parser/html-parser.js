@@ -52,18 +52,19 @@ function decodeAttr (value, shouldDecodeNewlines) {
 }
 
 export function parseHTML (html, options) {
-  const stack = []
+  const stack = [] // 维护AST节点层级的栈
   const expectHTML = options.expectHTML
   const isUnaryTag = options.isUnaryTag || no
-  const canBeLeftOpenTag = options.canBeLeftOpenTag || no
-  let index = 0
-  let last, lastTag
+  const canBeLeftOpenTag = options.canBeLeftOpenTag || no //用来检测一个标签是否是可以省略闭合标签的非自闭合标签
+  let index = 0 //解析游标，标识当前从何处开始解析模板字符串
+  let last, lastTag // last： 存储剩余还未解析的模板字符串 // lastTag：存储着位于 stack 栈顶的元素
   while (html) {
     last = html
     // Make sure we're not in a plaintext content element like script/style
-    // 确保我们不在纯文本内容元素中，如script/style
-    if (!lastTag || !isPlainTextElement(lastTag)) {
+    // 确保我们不在纯文本内容元素中，如script,style,textarea
+    if (!lastTag || !isPlainTextElement(lastTag)) { //isPlainTextElement(lastTag) 是检测 lastTag 是否为是那三个纯文本标签之一，是的话返回true，不是返回fasle
       let textEnd = html.indexOf('<')
+      // '<' 在第一个位置，为其余5种类型
       if (textEnd === 0) {
         // Comment:
         if (comment.test(html)) {
@@ -125,7 +126,10 @@ export function parseHTML (html, options) {
       }
 
       let text, rest, next
+      // '<' 不在第一个位置，文本开头
       if (textEnd >= 0) {
+        // 如果html字符串不是以'<'开头,说明'<'前面的都是纯文本，无需处理
+        // 那就把'<'以后的内容拿出来赋给rest
         rest = html.slice(textEnd)
         while (
           !endTag.test(rest) &&
@@ -134,14 +138,23 @@ export function parseHTML (html, options) {
           !conditionalComment.test(rest)
         ) {
           // < in plain text, be forgiving and treat it as text
+          /**
+           * 用'<'以后的内容rest去匹配endTag、startTagOpen、comment、conditionalComment
+           * 如果都匹配不上，表示'<'是属于文本本身的内容
+           */
+          // 在'<'之后查找是否还有'<'
           next = rest.indexOf('<', 1)
+          // 如果没有了，表示'<'后面也是文本
           if (next < 0) break
+          // 如果还有，表示'<'是文本中的一个字符
           textEnd += next
+          // 那就把next之后的内容截出来继续下一轮循环匹配
           rest = html.slice(textEnd)
         }
+        // '<'是结束标签的开始 ,说明从开始到'<'都是文本，截取出来
         text = html.substring(0, textEnd)
       }
-
+      // 整个模板字符串里没有找到`<`,说明整个模板字符串都是文本
       if (textEnd < 0) {
         text = html
       }
@@ -149,11 +162,12 @@ export function parseHTML (html, options) {
       if (text) {
         advance(text.length)
       }
-
+      // 把截取出来的text转化成textAST
       if (options.chars && text) {
         options.chars(text, index - text.length, index)
       }
     } else {
+      // 父元素为script、style、textarea时，其内部的内容全部当做纯文本处理
       let endTagLength = 0
       const stackedTag = lastTag.toLowerCase()
       const reStackedTag = reCache[stackedTag] || (reCache[stackedTag] = new RegExp('([\\s\\S]*?)(</' + stackedTag + '[^>]*>)', 'i'))
@@ -176,7 +190,7 @@ export function parseHTML (html, options) {
       html = rest
       parseEndTag(stackedTag, index - endTagLength, index)
     }
-
+    //将整个字符串作为文本对待
     if (html === last) {
       options.chars && options.chars(html)
       if (process.env.NODE_ENV !== 'production' && !stack.length && options.warn) {
@@ -193,7 +207,7 @@ export function parseHTML (html, options) {
     index += n
     html = html.substring(n)
   }
-
+  //parse 开始标签
   function parseStartTag () {
     const start = html.match(startTagOpen)
     // '<div></div>'.match(startTagOpen)  => ['<div','div',index:0,input:'<div></div>']
@@ -218,6 +232,14 @@ export function parseHTML (html, options) {
         attr.end = index
         match.attrs.push(attr)
       }
+      /**
+       * 这里判断了该标签是否为自闭合标签
+       * 自闭合标签如:<input type='text' />
+       * 非自闭合标签如:<div></div>
+       * '></div>'.match(startTagClose) => [">", "", index: 0, input: "></div>", groups: undefined]
+       * '/><div></div>'.match(startTagClose) => ["/>", "/", index: 0, input: "/><div></div>", groups: undefined]
+       * 因此，我们可以通过end[1]是否是"/"来判断该标签是否是自闭合标签
+       */
       if (end) {
         match.unarySlash = end[1]
         advance(end[0].length)
@@ -226,10 +248,10 @@ export function parseHTML (html, options) {
       }
     }
   }
-
+  //处理 parseStartTag 的结果
   function handleStartTag (match) {
-    const tagName = match.tagName
-    const unarySlash = match.unarySlash
+    const tagName = match.tagName // 开始标签的标签名
+    const unarySlash = match.unarySlash // 是否为自闭合标签的标志，自闭合为"",非自闭合为"/"
 
     if (expectHTML) {
       if (lastTag === 'p' && isNonPhrasingTag(tagName)) {
@@ -240,13 +262,14 @@ export function parseHTML (html, options) {
       }
     }
 
-    const unary = isUnaryTag(tagName) || !!unarySlash
+    const unary = isUnaryTag(tagName) || !!unarySlash // 布尔值，标志是否为自闭合标签
 
-    const l = match.attrs.length
-    const attrs = new Array(l)
+    const l = match.attrs.length // match.attrs 数组的长度
+    const attrs = new Array(l) // 一个与match.attrs数组长度相等的数组
     for (let i = 0; i < l; i++) {
       const args = match.attrs[i]
       const value = args[3] || args[4] || args[5] || ''
+      // shouldDecodeNewlines 为 true，意味着 Vue 在编译模板的时候，要对属性值中的换行符或制表符做兼容处理
       const shouldDecodeNewlines = tagName === 'a' && args[1] === 'href'
         ? options.shouldDecodeNewlinesForHref
         : options.shouldDecodeNewlines
@@ -269,13 +292,21 @@ export function parseHTML (html, options) {
       options.start(tagName, attrs, unary, match.start, match.end)
     }
   }
-
+  //parse 结束标签
+  // 接收三个参数：结束标签名，结束标签在html字符串中的起始和结束位置
+  /**
+   * 参数是可选的
+   * 第一种是三个参数都传递，用于处理普通的结束标签
+   * 第二种是只传递tagName
+   * 第三种是三个参数都不传递，用于处理栈中剩余未处理的标签
+   */
   function parseEndTag (tagName, start, end) {
     let pos, lowerCasedTagName
     if (start == null) start = index
     if (end == null) end = index
 
     // Find the closest opened tag of the same type
+    // 如果tagName存在，那么就从后往前遍历栈，在栈中寻找与tagName相同的标签并记录其所在的位置pos，如果tagName不存在，则将pos置为0
     if (tagName) {
       lowerCasedTagName = tagName.toLowerCase()
       for (pos = stack.length - 1; pos >= 0; pos--) {
@@ -308,11 +339,11 @@ export function parseHTML (html, options) {
       // Remove the open elements from the stack
       stack.length = pos
       lastTag = pos && stack[pos - 1].tag
-    } else if (lowerCasedTagName === 'br') {
+    } else if (lowerCasedTagName === 'br') {//浏览器会自动把</br>标签解析为正常的 <br>标签，所以Vue为了与浏览器的行为保持一致，故对这两个便签单独判断处理
       if (options.start) {
         options.start(tagName, [], true, start, end)
       }
-    } else if (lowerCasedTagName === 'p') {
+    } else if (lowerCasedTagName === 'p') {//对于</p>浏览器则自动将其补全为<p></p>，所以Vue为了与浏览器的行为保持一致，故对这两个便签单独判断处理
       if (options.start) {
         options.start(tagName, [], false, start, end)
       }
