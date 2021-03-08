@@ -61,33 +61,43 @@ export function parseHTML (html, options) {
   while (html) {
     last = html
     // Make sure we're not in a plaintext content element like script/style
+    // 确保我们不在纯文本内容元素中，如script/style
     if (!lastTag || !isPlainTextElement(lastTag)) {
       let textEnd = html.indexOf('<')
       if (textEnd === 0) {
         // Comment:
         if (comment.test(html)) {
+          // 若为注释，则继续查找是否存在'-->'
           const commentEnd = html.indexOf('-->')
 
           if (commentEnd >= 0) {
+            // 若存在 '-->',继续判断options中是否保留注释
             if (options.shouldKeepComment) {
+              // 若保留注释，则把注释截取出来传给options.comment，创建注释类型的AST节点
               options.comment(html.substring(4, commentEnd), index, index + commentEnd + 3)
             }
+            // 若不保留注释，则将游标移动到'-->'之后，继续向后解析
             advance(commentEnd + 3)
             continue
           }
         }
 
         // http://en.wikipedia.org/wiki/Conditional_comment#Downlevel-revealed_conditional_comment
+        // 解析是否是条件注释
         if (conditionalComment.test(html)) {
+          // 若为条件注释，则继续查找是否存在']>'
           const conditionalEnd = html.indexOf(']>')
 
           if (conditionalEnd >= 0) {
+            // 若存在 ']>',则从原本的html字符串中把条件注释截掉，
+            // 把剩下的内容重新赋给html，继续向后匹配
             advance(conditionalEnd + 2)
             continue
           }
         }
 
         // Doctype:
+        // 解析DOCTYPE
         const doctypeMatch = html.match(doctype)
         if (doctypeMatch) {
           advance(doctypeMatch[0].length)
@@ -178,7 +188,7 @@ export function parseHTML (html, options) {
 
   // Clean up any remaining tags
   parseEndTag()
-
+  // 用来移动解析游标的，解析完一部分就把游标向后移动一部分，确保不会重复解析
   function advance (n) {
     index += n
     html = html.substring(n)
@@ -186,6 +196,7 @@ export function parseHTML (html, options) {
 
   function parseStartTag () {
     const start = html.match(startTagOpen)
+    // '<div></div>'.match(startTagOpen)  => ['<div','div',index:0,input:'<div></div>']
     if (start) {
       const match = {
         tagName: start[1],
@@ -194,6 +205,13 @@ export function parseHTML (html, options) {
       }
       advance(start[0].length)
       let end, attr
+      /**
+       * <div a=1 b=2 c=3></div>
+       * 从<div之后到开始标签的结束符号'>'之前，一直匹配属性attrs
+       * 所有属性匹配完之后，html字符串还剩下
+       * 自闭合标签剩下：'/>'
+       * 非自闭合标签剩下：'></div>'
+       */
       while (!(end = html.match(startTagClose)) && (attr = html.match(dynamicArgAttribute) || html.match(attribute))) {
         attr.start = index
         advance(attr[0].length)

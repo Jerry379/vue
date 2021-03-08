@@ -509,6 +509,7 @@ export function createPatchFunction (backend) {
     }
   }
 
+  //在oldch中找到与node相同的vnode,返回找到的vnode的索引
   function findIdxInOld (node, oldCh, start, end) {
     for (let i = start; i < end; i++) {
       const c = oldCh[i]

@@ -15,14 +15,14 @@ export const createCompiler = createCompilerCreator(function baseCompile (
   // 模板解析阶段：用正则等方式解析 template 模板中的指令、class、style等数据，形成AST
   const ast = parse(template.trim(), options)
   if (options.optimize !== false) {
-    // 优化阶段：遍历AST，找出其中的静态节点，并打上标记；
+    // 优化阶段：遍历AST，找出其中的静态节点，并打上标记；挡在进行patch 的过程中， DOM-Diff 算法会直接跳过静态节点，从而减少了比较的过程，优化了 patch 的性能。
     optimize(ast, options)
   }
   // 代码生成阶段：将AST转换成渲染函数；
   const code = generate(ast, options)
   return {
-    ast,
-    render: code.render,
-    staticRenderFns: code.staticRenderFns
+    ast, //抽象语法树
+    render: code.render, //渲染函数
+    staticRenderFns: code.staticRenderFns //静态渲染函数
   }
 })

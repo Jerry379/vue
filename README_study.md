@@ -5,6 +5,9 @@
 ├─flow                   # flow的类型声明文件
 ├─src                    # 项目源代码
 │    ├─complier          # 与模板编译相关的代码，包括把模板解析成ast语法树，语法树优化，生成代码等功能
+|    |  ├─parser/index.js # 模板解析阶段——解析器
+|    |  ├─compiler/optimizer.js # 优化阶段——优化器
+|    |  ├─compiler/codegen/index.js # 代码生成阶段——代码生成器
 │    ├─core              # 通用的、与运行平台无关的运行时代码，核心代码，包括内置组件、全局 API 封装，Vue 实例化、观察者、虚拟 DOM、工具函数等等
 │    │  ├─observe        # 实现变化侦测的代码
 │    │  ├─vdom           # 实现virtual dom的代码

@@ -75,6 +75,8 @@ export function createASTElement (
 
 /**
  * Convert HTML string to AST.
+ * HTML解析器是主线，先用HTML解析器进行解析整个模板，在解析过程中如果碰到文本内容，
+ * 那就调用文本解析器来解析文本，如果碰到文本中包含过滤器那就调用过滤器解析器来解析
  */
 export function parse (
   template: string,
@@ -210,6 +212,8 @@ export function parse (
     shouldDecodeNewlinesForHref: options.shouldDecodeNewlinesForHref,
     shouldKeepComment: options.comments,
     outputSourceRange: options.outputSourceRange,
+    // 当解析到开始标签时，调用该函数
+    // 标签是否自闭合unary
     start (tag, attrs, unary, start, end) {
       // check namespace.
       // inherit parent ns if there is one
@@ -296,7 +300,7 @@ export function parse (
         closeElement(element)
       }
     },
-
+    // 当解析到结束标签时，调用该函数
     end (tag, start, end) {
       const element = stack[stack.length - 1]
       // pop stack
@@ -307,7 +311,7 @@ export function parse (
       }
       closeElement(element)
     },
-
+    // 当解析到文本时，调用该函数
     chars (text: string, start: number, end: number) {
       if (!currentParent) {
         if (process.env.NODE_ENV !== 'production') {
@@ -357,14 +361,14 @@ export function parse (
         }
         let res
         let child: ?ASTNode
-        if (!inVPre && text !== ' ' && (res = parseText(text, delimiters))) {
+        if (!inVPre && text !== ' ' && (res = parseText(text, delimiters))) { // text是带变量的动态文本; 如果是动态文本，则创建动态文本类型的AST节点
           child = {
             type: 2,
             expression: res.expression,
             tokens: res.tokens,
             text
           }
-        } else if (text !== ' ' || !children.length || children[children.length - 1].text !== ' ') {
+        } else if (text !== ' ' || !children.length || children[children.length - 1].text !== ' ') { //如果不是动态文本，则创建纯静态文本类型的AST节点。
           child = {
             type: 3,
             text
@@ -379,10 +383,13 @@ export function parse (
         }
       }
     },
+    // 当解析到注释时，调用该函数
     comment (text: string, start, end) {
       // adding anything as a sibling to the root node is forbidden
       // comments should still be allowed, but ignored
+      // 禁止向根节点添加任何作为同级节点的内容。仍应允许注释，但应忽略注释
       if (currentParent) {
+        // 注释类型的AST节点
         const child: ASTText = {
           type: 3,
           text,
