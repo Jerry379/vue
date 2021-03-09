@@ -331,6 +331,7 @@ function normalizeProps (options: Object, vm: ?Component) {
 
 /**
  * Normalize all injections into Object-based format
+ * 将inject转换为对象格式
  */
 function normalizeInject (options: Object, vm: ?Component) {
   const inject = options.inject

@@ -50,7 +50,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
     observe(obj)
     return obj
   }
-
+  //相当于Vue.options.components = {};Vue.options.directives = {};Vue.options.filters = {}
   Vue.options = Object.create(null)
   ASSET_TYPES.forEach(type => {
     Vue.options[type + 's'] = Object.create(null)

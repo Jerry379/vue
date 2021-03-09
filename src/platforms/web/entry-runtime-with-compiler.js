@@ -31,7 +31,9 @@ Vue.prototype.$mount = function (
 
   const options = this.$options
   // resolve template/el and convert to render function
+  // 如果用户没有手写render函数
   if (!options.render) {
+    // 获取模板，先尝试获取内部模板，如果获取不到则获取外部模板
     let template = options.template
     if (template) {
       if (typeof template === 'string') {

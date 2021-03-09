@@ -33,6 +33,14 @@ export function initLifecycle (vm: Component) {
   const options = vm.$options
 
   // locate first non-abstract parent
+  /**
+   * 如果当前组件不是抽象组件并且存在父级，那么就通过while循环来向上循环，
+   * 如果当前组件的父级是抽象组件并且也存在父级，那就继续向上查找当前组件父级的父级，
+   * 直到找到第一个不是抽象类型的父级时，将其赋值vm.$parent，
+   * 同时把该实例自身添加进找到的父级的$children属性中。
+   * 这样就确保了在子组件的$parent属性上能访问到父组件实例，
+   * 在父组件的$children属性上也能访问子组件的实例。
+   */
   let parent = options.parent
   if (parent && !options.abstract) {
     while (parent.$options.abstract && parent.$parent) {
@@ -42,7 +50,7 @@ export function initLifecycle (vm: Component) {
   }
 
   vm.$parent = parent
-  vm.$root = parent ? parent.$root : vm
+  vm.$root = parent ? parent.$root : vm //当前实例的根实例
 
   vm.$children = []
   vm.$refs = {}
@@ -337,6 +345,8 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
   }
 }
 
+// 首先从实例的$options中获取到需要触发的钩子名称所对应的钩子函数数组handlers
+// 每个生命周期钩子名称都对应了一个钩子函数数组。然后遍历该数组，将数组中的每个钩子函数都执行一遍
 export function callHook (vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks 调用生命周期钩子时禁用dep收集
   pushTarget()

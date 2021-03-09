@@ -14,9 +14,11 @@ export function initProvide (vm: Component) {
 }
 
 export function initInjections (vm: Component) {
+  // 调用resolveInject把inject选项中的数据转化成键值对的形式赋给result
   const result = resolveInject(vm.$options.inject, vm)
   if (result) {
-    toggleObserving(false)
+    toggleObserving(false) //为了告诉defineReactive函数仅仅是把键值添加到当前实例上而不需要将其转换成响应式,provide 和 inject 绑定并不是可响应的。
+    // 遍历result中的每一对键值，调用defineReactive函数将其添加当前实例上
     Object.keys(result).forEach(key => {
       /* istanbul ignore else */
       if (process.env.NODE_ENV !== 'production') {
@@ -36,6 +38,8 @@ export function initInjections (vm: Component) {
   }
 }
 
+// 应该把每一个数据key从当前组件起，不断的向上游父级组件中查找该数据key对应的值，直到找到为止。
+// 如果在上游所有父级组件中没找到，那么就看在inject 选项是否为该数据key设置了默认值，如果设置了就使用默认值，如果没有设置，则抛出异常。
 export function resolveInject (inject: any, vm: Component): ?Object {
   if (inject) {
     // inject is :any because flow is not smart enough to figure out cached
@@ -58,6 +62,7 @@ export function resolveInject (inject: any, vm: Component): ?Object {
         source = source.$parent
       }
       if (!source) {
+        // inject 选项中当前的数据key是否设置了默认值
         if ('default' in inject[key]) {
           const provideDefault = inject[key].default
           result[key] = typeof provideDefault === 'function'

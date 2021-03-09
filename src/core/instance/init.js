@@ -12,9 +12,10 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 
 let uid = 0
 
+// Vue类的原型上绑定_init方法
 export function initMixin (Vue: Class<Component>) {
   Vue.prototype._init = function (options?: Object) {
-    const vm: Component = this
+    const vm: Component = this //Vue实例
     // a uid
     vm._uid = uid++
 
@@ -35,6 +36,7 @@ export function initMixin (Vue: Class<Component>) {
       // internal component options needs special treatment.
       initInternalComponent(vm, options)
     } else {
+      // 当前构造函数的options属性及其父级构造函数的options属性进行合并
       vm.$options = mergeOptions(
         resolveConstructorOptions(vm.constructor),
         options || {},
@@ -49,14 +51,14 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
-    initLifecycle(vm)
-    initEvents(vm)
-    initRender(vm)
-    callHook(vm, 'beforeCreate')
-    initInjections(vm) // resolve injections before data/props
-    initState(vm)
-    initProvide(vm) // resolve provide after data/props
-    callHook(vm, 'created')
+    initLifecycle(vm) // 初始化生命周期
+    initEvents(vm) // 初始化事件
+    initRender(vm) // 初始化渲染
+    callHook(vm, 'beforeCreate') // 调用生命周期钩子函数
+    initInjections(vm) // resolve injections before data/props //初始化injections
+    initState(vm) // 初始化props,methods,data,computed,watch
+    initProvide(vm) // resolve provide after data/props // 初始化 provide
+    callHook(vm, 'created') // 调用生命周期钩子函数
 
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
@@ -64,7 +66,8 @@ export function initMixin (Vue: Class<Component>) {
       mark(endTag)
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
-
+    // 最后，会判断用户是否传入了el选项，如果传入了则调用$mount函数进入模板编译与挂载阶段，
+    // 如果没有传入el选项，则不进入下一个生命周期阶段，需要用户手动执行vm.$mount方法才进入下一个生命周期阶段。
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
     }

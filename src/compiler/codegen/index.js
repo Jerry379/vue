@@ -40,6 +40,7 @@ export type CodegenResult = {
   staticRenderFns: Array<string>
 };
 
+// 代码生成阶段
 export function generate (
   ast: ASTElement | void,
   options: CompilerOptions
@@ -51,7 +52,7 @@ export function generate (
     staticRenderFns: state.staticRenderFns
   }
 }
-
+// 根据当前 AST 元素节点属性的不同从而执行不同的代码生成函数
 export function genElement (el: ASTElement, state: CodegenState): string {
   if (el.parent) {
     el.pre = el.pre || el.parent.pre
@@ -70,11 +71,11 @@ export function genElement (el: ASTElement, state: CodegenState): string {
   } else if (el.tag === 'slot') {
     return genSlot(el, state)
   } else {
-    // component or element
+    // component or element 组件或元素
     let code
     if (el.component) {
       code = genComponent(el.component, el, state)
-    } else {
+    } else {//生成元素型节点的render函数
       let data
       if (!el.plain || (el.pre && state.maybeComponent(el))) {
         data = genData(el, state)
@@ -216,6 +217,7 @@ export function genFor (
     '})'
 }
 
+// 先给data赋值为一个{，然后判断存在哪些属性数据，就将这些数据拼接到data中，最后再加一个}，最终得到节点全部属性data
 export function genData (el: ASTElement, state: CodegenState): string {
   let data = '{'
 
@@ -460,6 +462,7 @@ function genScopedSlot (
   return `{key:${el.slotTarget || `"default"`},fn:${fn}${reverseProxy}}`
 }
 
+// 获取子节点列表children
 export function genChildren (
   el: ASTElement,
   state: CodegenState,
@@ -531,7 +534,7 @@ function genNode (node: ASTNode, state: CodegenState): string {
     return genText(node)
   }
 }
-
+// 文本型的VNode可以调用_v(text)函数来创建
 export function genText (text: ASTText | ASTExpression): string {
   return `_v(${text.type === 2
     ? text.expression // no need for () because already wrapped in _s()
@@ -539,6 +542,7 @@ export function genText (text: ASTText | ASTExpression): string {
   })`
 }
 
+// 注释型的VNode可以调用_e(text)函数来创建
 export function genComment (comment: ASTText): string {
   return `_e(${JSON.stringify(comment.text)})`
 }
