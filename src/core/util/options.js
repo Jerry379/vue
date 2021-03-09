@@ -297,7 +297,7 @@ export function validateComponentName (name: string) {
  */
 function normalizeProps (options: Object, vm: ?Component) {
   const props = options.props
-  if (!props) return
+  if (!props) return //如果不存在，则直接返回
   const res = {}
   let i, val, name
   if (Array.isArray(props)) {

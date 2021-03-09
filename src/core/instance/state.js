@@ -46,35 +46,37 @@ export function proxy (target: Object, sourceKey: string, key: string) {
 }
 // 初始化状态选项
 export function initState (vm: Component) {
+  // 用来存储当前实例中所有的watcher实例，无论是使用vm.$watch注册的watcher实例还是使用watch选项注册的watcher实例，都会被保存到该属性中。
   vm._watchers = []
   const opts = vm.$options
-  if (opts.props) initProps(vm, opts.props)
-  if (opts.methods) initMethods(vm, opts.methods)
+  if (opts.props) initProps(vm, opts.props) // 初始化props选项
+  if (opts.methods) initMethods(vm, opts.methods) // 始化methods选项
   if (opts.data) {
-    initData(vm)
+    initData(vm) //初始化data选项
   } else {
-    observe(vm._data = {}, true /* asRootData */)
+    observe(vm._data = {}, true /* asRootData */) //把data当作空对象并将其转换成响应
   }
-  if (opts.computed) initComputed(vm, opts.computed)
-  if (opts.watch && opts.watch !== nativeWatch) {
+  if (opts.computed) initComputed(vm, opts.computed) //初始化computed选项
+  if (opts.watch && opts.watch !== nativeWatch) {//初始化watch选项
     initWatch(vm, opts.watch)
   }
 }
 
+// 接收两个参数：Vue实例、当前实例规范化后的props选项
 function initProps (vm: Component, propsOptions: Object) {
-  const propsData = vm.$options.propsData || {}
-  const props = vm._props = {}
+  const propsData = vm.$options.propsData || {} //父组件传入的真实props数据
+  const props = vm._props = {} //指向vm._props的指针，所有设置到props变量中的属性都会保存到vm._props中。
   // cache prop keys so that future props updates can iterate using Array
   // instead of dynamic object key enumeration.
-  const keys = vm.$options._propKeys = []
-  const isRoot = !vm.$parent
+  const keys = vm.$options._propKeys = [] //vm.$options._propKeys的指针，缓存props对象中的key，将来更新props时只需遍历vm.$options._propKeys数组即可得到所有props的key
+  const isRoot = !vm.$parent //当前组件是否为根组件。
   // root instance props should be converted
   if (!isRoot) {
-    toggleObserving(false)
+    toggleObserving(false) //如果不是，那么不需要将props数组转换为响应式的，
   }
   for (const key in propsOptions) {
     keys.push(key)
-    const value = validateProp(key, propsOptions, propsData, vm)
+    const value = validateProp(key, propsOptions, propsData, vm) //校验父组件传入的props数据类型是否匹配并获取到传入的值value
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
       const hyphenatedKey = hyphenate(key)

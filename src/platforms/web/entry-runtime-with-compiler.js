@@ -14,7 +14,7 @@ const idToTemplate = cached(id => {
   return el && el.innerHTML
 })
 
-const mount = Vue.prototype.$mount
+const mount = Vue.prototype.$mount //缓存Vue原型上的$mount方法
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
@@ -35,7 +35,7 @@ Vue.prototype.$mount = function (
   if (!options.render) {
     // 获取模板，先尝试获取内部模板，如果获取不到则获取外部模板
     let template = options.template
-    if (template) {
+    if (template) {//在用户没有手写render函数的情况下获取传入的模板template；
       if (typeof template === 'string') {
         if (template.charAt(0) === '#') {
           template = idToTemplate(template)
@@ -58,7 +58,7 @@ Vue.prototype.$mount = function (
     } else if (el) {
       template = getOuterHTML(el)
     }
-    if (template) {
+    if (template) {//将获取到的template编译成render函数
       /* istanbul ignore if */
       if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
         mark('compile')

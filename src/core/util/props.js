@@ -19,14 +19,14 @@ type PropOptions = {
 };
 
 export function validateProp (
-  key: string,
-  propOptions: Object,
-  propsData: Object,
-  vm?: Component
+  key: string, //遍历propOptions时拿到的每个属性名
+  propOptions: Object, //当前实例规范化后的props选项
+  propsData: Object, //父组件传入的真实props数据
+  vm?: Component //当前实例
 ): any {
-  const prop = propOptions[key]
-  const absent = !hasOwn(propsData, key)
-  let value = propsData[key]
+  const prop = propOptions[key] //当前key在propOptions中对应的值。
+  const absent = !hasOwn(propsData, key) //当前key是否在propsData中存在，即父组件是否传入了该属性。
+  let value = propsData[key] //当前key在propsData中对应的值，即父组件对于该属性传入的真实值。
   // boolean casting
   const booleanIndex = getTypeIndex(Boolean, prop.type)
   if (booleanIndex > -1) {

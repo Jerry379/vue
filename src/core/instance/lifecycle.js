@@ -106,16 +106,20 @@ export function lifecycleMixin (Vue: Class<Component>) {
   // 完全销毁一个实例。清理它与其它实例的连接，解绑它的全部指令及事件监听器。触发 beforeDestroy 和 destroyed 的钩子。
   Vue.prototype.$destroy = function () {
     const vm: Component = this
-    if (vm._isBeingDestroyed) {//如果正在被销毁就return
+    if (vm._isBeingDestroyed) {//如果正在被销毁就return,_isBeingDestroyed标志着当前实例是否处于正在被销毁的状态
       return
     }
     callHook(vm, 'beforeDestroy')//触发beforeDestroy钩子
     vm._isBeingDestroyed = true
-    // remove self from parent
+    // remove self from parent 将当前的Vue实例从其父级实例中删除;
+    // 如果当前实例有父级实例，同时该父级实例没有被销毁并且不是抽象组件，那么就将当前实例从其父级实例的$children属性中删除
     const parent = vm.$parent
     if (parent && !parent._isBeingDestroyed && !vm.$options.abstract) {
       remove(parent.$children, vm)
     }
+    // 开始将自己身上的依赖追踪和事件监听移除
+    // 一部分是实例自身依赖其他数据，需要将实例自身从其他数据的依赖列表中删除；
+    // 另一部分是实例内的数据对其他数据的依赖（如用户使用$watch创建的依赖），也需要从其他数据的依赖列表中删除实例内数据。
     // teardown watchers 拆卸观察者
     if (vm._watcher) {
       vm._watcher.teardown()
@@ -130,7 +134,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
       vm._data.__ob__.vmCount--
     }
     // call the last hook...
-    vm._isDestroyed = true
+    vm._isDestroyed = true //_isDestroyed 属性来表示当前实例已经被销毁
     // invoke destroy hooks on current rendered tree
     vm.__patch__(vm._vnode, null)
     // fire destroyed hook
@@ -155,6 +159,7 @@ export function mountComponent (
 ): Component {
   vm.$el = el
   if (!vm.$options.render) {
+    // 首先会判断实例上是否存在渲染函数，如果不存在，则设置一个默认的渲染函数createEmptyVNode，该渲染函数会创建一个注释类型的VNode节点
     vm.$options.render = createEmptyVNode
     if (process.env.NODE_ENV !== 'production') {
       /* istanbul ignore if */
