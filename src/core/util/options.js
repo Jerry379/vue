@@ -441,23 +441,26 @@ export function mergeOptions (
  * to assets defined in its ancestor chain.
  */
 export function resolveAsset (
-  options: Object,
-  type: string,
-  id: string,
+  options: Object, //当前实例的$options属性
+  type: string, //type为filters
+  id: string, //id为当前过滤器的id
   warnMissing?: boolean
 ): any {
   /* istanbul ignore if */
   if (typeof id !== 'string') {
     return
   }
+  // 获取到当前实例的$options属性中所有的过滤器，赋给变量assets
   const assets = options[type]
   // check local registration variations first
+  // 先从本地注册中查找
   if (hasOwn(assets, id)) return assets[id]
-  const camelizedId = camelize(id)
+  const camelizedId = camelize(id)// 转化为小驼峰查找
   if (hasOwn(assets, camelizedId)) return assets[camelizedId]
-  const PascalCaseId = capitalize(camelizedId)
+  const PascalCaseId = capitalize(camelizedId)//转化为大驼峰在查找
   if (hasOwn(assets, PascalCaseId)) return assets[PascalCaseId]
   // fallback to prototype chain
+  // 再从原型链中查找
   const res = assets[id] || assets[camelizedId] || assets[PascalCaseId]
   if (process.env.NODE_ENV !== 'production' && warnMissing && !res) {
     warn(

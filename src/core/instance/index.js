@@ -17,7 +17,7 @@ function Vue (options) {
 initMixin(Vue)
 stateMixin(Vue)
 eventsMixin(Vue)
-lifecycleMixin(Vue)
-renderMixin(Vue)
+lifecycleMixin(Vue)//$forceUpdate和$destroy方法是在lifecycleMixin函数中挂载到Vue原型上的
+renderMixin(Vue)//$nextTick方法是在renderMixin函数中挂载到Vue原型上的
 
 export default Vue

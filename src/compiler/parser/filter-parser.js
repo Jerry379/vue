@@ -2,14 +2,30 @@
 
 const validDivisionCharRE = /[\w).+\-_$\]]/
 
+// 该函数的作用的是将传入的形如'message | capitalize'这样的过滤器字符串转化成_f("capitalize")(message)
+/**
+ * 
+ * 0x22 ----- "
+ * 0x27 ----- '
+ * 0x28 ----- (
+ * 0x29 ----- )
+ * 0x2f ----- /
+ * 0x5C ----- \
+ * 0x5B ----- [
+ * 0x5D ----- ]
+ * 0x60 ----- `
+ * 0x7C ----- |
+ * 0x7B ----- {
+ * 0x7D ----- }
+ */
 export function parseFilters (exp: string): string {
-  let inSingle = false
-  let inDouble = false
-  let inTemplateString = false
-  let inRegex = false
-  let curly = 0
-  let square = 0
-  let paren = 0
+  let inSingle = false // exp是否在 '' 中
+  let inDouble = false // exp是否在 "" 中
+  let inTemplateString = false // exp是否在 `` 中
+  let inRegex = false // exp是否在 \\ 中
+  let curly = 0 // 在exp中发现一个 { 则curly加1，发现一个 } 则curly减1，直到culy为0 说明 { ... }闭合
+  let square = 0 // 在exp中发现一个 [ 则curly加1，发现一个 ] 则curly减1，直到culy为0 说明 [ ... ]闭合
+  let paren = 0 // 在exp中发现一个 ( 则curly加1，发现一个 ) 则curly减1，直到culy为0 说明 ( ... )闭合
   let lastFilterIndex = 0
   let c, prev, i, expression, filters
 
@@ -63,7 +79,9 @@ export function parseFilters (exp: string): string {
       }
     }
   }
-
+  // 上述方法会生成如下结果
+  // expression = message
+  // filters = ['filter1','filter2(arg)']
   if (expression === undefined) {
     expression = exp.slice(0, i).trim()
   } else if (lastFilterIndex !== 0) {
@@ -74,7 +92,6 @@ export function parseFilters (exp: string): string {
     (filters || (filters = [])).push(exp.slice(lastFilterIndex, i).trim())
     lastFilterIndex = i + 1
   }
-
   if (filters) {
     for (i = 0; i < filters.length; i++) {
       expression = wrapFilter(expression, filters[i])
@@ -85,7 +102,7 @@ export function parseFilters (exp: string): string {
 }
 
 function wrapFilter (exp: string, filter: string): string {
-  const i = filter.indexOf('(')
+  const i = filter.indexOf('(')//根据有没有括号来判断过滤器有没有接收参数
   if (i < 0) {
     // _f: resolveFilter
     return `_f("${filter}")(${exp})`
