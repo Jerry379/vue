@@ -72,9 +72,9 @@ export function createPatchFunction (backend) {
   let i, j
   const cbs = {}
 
-  const { modules, nodeOps } = backend
+  const { modules, nodeOps } = backend // 依赖的模块和dom操作api
 
-  for (i = 0; i < hooks.length; ++i) {
+  for (i = 0; i < hooks.length; ++i) {// 根据定义好的hooks将依赖中的方法添加到cbs中去方便在不同时期执行不同方法
     cbs[hooks[i]] = []
     for (j = 0; j < modules.length; ++j) {
       if (isDef(modules[j][hooks[i]])) {

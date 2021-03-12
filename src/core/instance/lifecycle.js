@@ -72,10 +72,10 @@ export function lifecycleMixin (Vue: Class<Component>) {
     vm._vnode = vnode
     // Vue.prototype.__patch__ is injected in entry points
     // based on the rendering backend used.
-    if (!prevVnode) {
+    if (!prevVnode) {// 初始化
       // initial render
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
-    } else {
+    } else {// 数据更新时
       // updates
       vm.$el = vm.__patch__(prevVnode, vnode)
     }
@@ -84,7 +84,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     if (prevEl) {
       prevEl.__vue__ = null
     }
-    if (vm.$el) {
+    if (vm.$el) {// 更新真实dom上对虚拟dom的指向
       vm.$el.__vue__ = vm
     }
     // if parent is an HOC, update its $el as well
